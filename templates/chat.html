@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Aid AI Medical Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1B5E20;
+            --secondary-color: #E8F5E9;
+            --accent-color: #2E7D32;
+            --background-color: #F5F7F5;
+            --text-color: #263238;
+        }
+
+        body {
+            background-color: var(--background-color);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-color);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            padding: 0.8rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: white;
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        /* Update the chat-container styles */
+.chat-container {
+    flex: 1;
+    background-color: white;
+    margin: 1.5rem auto;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(27, 94, 32, 0.1);
+    overflow: hidden;
+    position: relative;
+    max-width: 1200px;
+    width: 95%;
+    padding: 1.5rem;
+}
+
+        .upload-container, .voice-container {
+            background: var(--secondary-color);
+            border: 2px dashed rgba(27, 94, 32, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            margin: 1rem auto;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-container:hover, .voice-container:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(27, 94, 32, 0.15);
+        }
+
+        .preview-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;  /* Changed from start to center */
+    padding: 1rem;
+    width: 100%;  /* Added to ensure full width */
+}
+
+       /* Update file-preview styles */
+.file-preview {
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+    background: var(--secondary-color);
+    padding: 1rem;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(27, 94, 32, 0.1);
+    margin: 0 auto;  /* Added for center alignment */
+}
+        .preview-image {
+            width: 100%;
+            height: 250px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: white;
+            padding: 0.5rem;
+        }
+.prompt-container {
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+    background: white;
+    padding: 1rem;
+    border-radius: 15px;
+    border: 1px solid rgba(27, 94, 32, 0.2);
+    margin: 0 auto;  /* Added for center alignment */
+}
+
+
+        .prompt-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid rgba(27, 94, 32, 0.3);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            resize: none;
+        }
+
+        .upload-icon, .voice-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .file-type-icons i {
+            color: var(--primary-color);
+            margin: 0 0.8rem;
+            font-size: 1.5rem;
+        }
+
+        .upload-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(27, 94, 32, 0.2);
+        }
+
+        .upload-button:hover {
+            background: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .voice-icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.2);
+        }
+
+        .voice-icon-container i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .voice-icon-container:hover {
+            transform: scale(1.05);
+            background: var(--accent-color);
+        }
+        /* Update mobile media queries */
+@media (max-width: 768px) {
+    .chat-container {
+        margin: 1rem auto;
+        padding: 1rem;
+        width: 90%;  /* Slightly reduced width for better mobile display */
+    }
+
+    .upload-container, .voice-container {
+        padding: 1.5rem;
+        margin: 0.8rem auto;
+        width: 90%;  /* Added width control */
+    }
+
+    .preview-section {
+        gap: 1rem;
+        padding: 0.5rem;  /* Reduced padding for mobile */
+    }
+
+    .file-preview, .prompt-container {
+        min-width: 90%;  /* Changed from 100% to 90% */
+        margin: 0 auto;  /* Ensure center alignment */
+    }
+
+    .preview-image {
+        height: 200px;
+        margin: 0 auto;  /* Center the image */
+        display: block;  /* Ensure block display for margin auto to work */
+    }
+
+    /* Ensure chat interface elements are centered */
+    .chat-interface {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    /* Center voice container on mobile */
+    .voice-container {
+        width: 90%;
+        margin: 1rem auto;
+    }
+}
+
+/* Additional utility class for centering text content */
+.text-center {
+    text-align: center;
+}
+        .footer {
+            background: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 0.8rem;
+            margin-top: auto;
+        }
+
+        .footer p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .footer i {
+            color: #FF5E5E;
+            margin: 0 0.3rem;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                margin: 1rem auto;
+                padding: 1rem;
+            }
+
+            .upload-container, .voice-container {
+                padding: 1.5rem;
+                margin: 0.8rem auto;
+            }
+
+            .preview-section {
+                gap: 1rem;
+            }
+
+            .file-preview, .prompt-container {
+                min-width: 100%;
+            }
+
+            .preview-image {
+                height: 200px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1><i class="fas fa-heartbeat me-2"></i>VisionAid</h1>
+    </header>
+
+    <div class="main-content" id="mainContent">
+        <div class="chat-container">
+            <div class="initial-state" id="initialState">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="upload-container" id="uploadContainer">
+                        <i class="fas fa-file-medical-alt upload-icon"></i>
+                        <h3 class="mb-3">Upload your medical document or image</h3>
+                        <div class="file-type-icons mb-3">
+                            <i class="fas fa-images" title="Images"></i>
+                            <i class="fas fa-file-pdf" title="PDF"></i>
+                            <i class="fas fa-file-medical" title="Medical Reports"></i>
+                        </div>
+                        <input type="file" id="fileInput" name="file_img" hidden accept=".pdf,.txt,.jpg,.jpeg,.png">
+                        <button type="button" class="upload-button" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Choose File
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="chat-interface" id="chatInterface" style="display: none;">
+                <div class="preview-section">
+                    <div class="file-preview" id="filePreview">
+                        <!-- Preview image will be inserted here -->
+                    </div>
+                    <div id="prompt-container">
+
+                    </div>
+                </div>
+
+                <div class="voice-container" id="voiceContainer">
+                    <h3 class="mb-3">Voice Response</h3>
+                    <div class="voice-icon-container" id="voiceIcon">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <div class="recording-status" id="recordingStatus">Click the microphone to start recording</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Created with <i class="fas fa-heart"></i> by Hasnain Muavia</p>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+
+        function sendPictureFile(file) {
+            const formData = new FormData();
+            formData.append('file_img', file);
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+            $.ajax({
+                url: '{% url "index" %}',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Hide upload container and show chat interface
+                        document.getElementById('initialState').style.display = 'none';
+                        document.getElementById('chatInterface').style.display = 'flex';
+                        document.getElementById('voiceContainer').style.display = 'block';
+
+                        // Show file preview
+                        const filePreview = document.getElementById('filePreview');
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                filePreview.innerHTML = `<img src="${e.target.result}" class="preview-image">`;
+                            };
+                            reader.readAsDataURL(file);
+                        } else {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                filePreview.innerHTML = `<div class="preview-text">${e.target.result}</div>`;
+                            };
+                            reader.readAsText(file);
+                        }
+
+                        // Play audio automatically if available
+                        if (response.audio) {
+                            const audio = new Audio("data:audio/wav;base64," + response.audio);
+                            audio.play();
+                        }
+                        if(response.text)
+                        {
+                            updatePromptContainer(response.text)
+                        }
+                    } else {
+                        document.getElementById('errorMessage').innerText = response.message;
+                        document.getElementById('errorMessage').style.display = 'block';
+                    }
+                },
+                error: function(xhr) {
+                    document.getElementById('errorMessage').innerText = 'Error uploading file: ' + xhr.statusText;
+                    document.getElementById('errorMessage').style.display = 'block';
+                }
+            });
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const fileInput = this;
+            if (fileInput.files.length > 0) {
+                sendPictureFile(fileInput.files[0]);
+            }
+        });
+
+     let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+// Function to convert audio buffer to WAV format
+function convertToWav(audioBuffer) {
+    const numOfChannels = 1; // Mono audio
+    const sampleRate = 44100;
+    const bitsPerSample = 16;
+    const bytesPerSample = bitsPerSample / 8;
+    const blockAlign = numOfChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = audioBuffer.length * bytesPerSample;
+
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+
+    // Write WAV header
+    // "RIFF" chunk descriptor
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(view, 8, 'WAVE');
+
+    // "fmt " sub-chunk
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // fmt chunk size
+    view.setUint16(20, 1, true); // Audio format (1 for PCM)
+    view.setUint16(22, numOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitsPerSample, true);
+
+    // "data" sub-chunk
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    // Write audio data
+    const offset = 44;
+    for (let i = 0; i < audioBuffer.length; i++) {
+        view.setInt16(offset + (i * 2), audioBuffer[i] * 0x7FFF, true);
+    }
+
+    return buffer;
+}
+
+function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+    }
+}
+
+document.getElementById('voiceIcon').addEventListener('click', async () => {
+    if (!isRecording) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    sampleRate: 44100
+                }
+            });
+
+            // Create audio context
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaStreamSource(stream);
+            const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+
+            audioChunks = [];
+            isRecording = true;
+
+            document.getElementById('voiceIcon').classList.add('recording');
+            document.getElementById('voiceIcon').innerHTML = '<i class="fas fa-stop"></i>';
+            document.getElementById('recordingStatus').innerText = 'Recording... Click to stop';
+
+            processor.onaudioprocess = (e) => {
+                const inputData = e.inputBuffer.getChannelData(0);
+                audioChunks.push(new Float32Array(inputData));
+            };
+
+            mediaRecorder = {
+                stream: stream,
+                processor: processor,
+                source: source,
+                stop: () => {
+                    processor.disconnect();
+                    source.disconnect();
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            };
+
+        } catch (err) {
+            document.getElementById('voiceErrorMessage').innerText = 'Error accessing microphone: ' + err.message;
+            document.getElementById('voiceErrorMessage').style.display = 'block';
+        }
+    } else {
+        // Stop recording
+        mediaRecorder.stop();
+        isRecording = false;
+
+        // Concatenate all audio chunks
+        const audioData = new Float32Array(audioChunks.reduce((acc, chunk) => acc + chunk.length, 0));
+        let offset = 0;
+        audioChunks.forEach(chunk => {
+            audioData.set(chunk, offset);
+            offset += chunk.length;
+        });
+
+        // Convert to WAV format
+        const wavBuffer = convertToWav(audioData);
+        const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+
+        // Prepare and send the data
+        const formData = new FormData();
+        formData.append('audio', wavBlob, 'audio.wav');
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+        // Reset UI
+        document.getElementById('voiceIcon').classList.remove('recording');
+        document.getElementById('voiceIcon').innerHTML = '<i class="fas fa-microphone"></i>';
+        document.getElementById('recordingStatus').innerText = 'Click the microphone to start recording';
+
+        // Send to server
+        $.ajax({
+            url: '{% url "index" %}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.status === 'success' && response.audio) {
+                    const audio = new Audio("data:audio/wav;base64," + response.audio);
+                    audio.play();
+                }
+                else if (response.status === 'success' && response.model_response)
+                {
+                    updatePromptContainer(response.model_response)
+
+                } else {
+                    document.getElementById('voiceErrorMessage').innerText = response.message;
+                    document.getElementById('voiceErrorMessage').style.display = 'block';
+                }
+            },
+            error: function(xhr) {
+                document.getElementById('voiceErrorMessage').innerText = 'Error uploading voice: ' + xhr.statusText;
+                document.getElementById('voiceErrorMessage').style.display = 'block';
+            }
+        });
+    }
+});
+function updatePromptContainer(response) {
+    try {
+        // Get the prompt container element
+        const promptContainer = document.getElementById('prompt-container-p');
+
+        if (!promptContainer) {
+            throw new Error('Prompt container element not found');
+        }
+
+        // Clear any existing content
+        promptContainer.innerHTML = '';
+
+        // Check if response exists
+        if (response) {
+            // Create a text element to display the response
+            const responseText = document.createElement('p');
+            responseText.textContent = response;
+            responseText.classList.add('response-text');
+
+            // Add the response to the container
+            promptContainer.appendChild(responseText);
+        } else {
+            throw new Error('Response is empty or undefined');
+        }
+
+    } catch (error) {
+        console.error('Error updating prompt container:', error);
+        // Optionally display error message in the container
+        const errorMessage = document.createElement('p');
+        errorMessage.textContent = 'Error displaying response';
+        errorMessage.classList.add('error-message');
+        promptContainer.appendChild(errorMessage);
+    }
+}
+
+    </script>
+</body>
+</html>
