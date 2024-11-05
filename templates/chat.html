@@ -386,9 +386,10 @@
             }
         });
 
-     let mediaRecorder;
+let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
+const MAX_RECORDING_DURATION = 30000; // Maximum recording duration of 30 seconds
 
 // Function to convert audio buffer to WAV format
 function convertToWav(audioBuffer) {
@@ -404,12 +405,9 @@ function convertToWav(audioBuffer) {
     const view = new DataView(buffer);
 
     // Write WAV header
-    // "RIFF" chunk descriptor
     writeString(view, 0, 'RIFF');
     view.setUint32(4, 36 + dataSize, true);
     writeString(view, 8, 'WAVE');
-
-    // "fmt " sub-chunk
     writeString(view, 12, 'fmt ');
     view.setUint32(16, 16, true); // fmt chunk size
     view.setUint16(20, 1, true); // Audio format (1 for PCM)
@@ -418,8 +416,6 @@ function convertToWav(audioBuffer) {
     view.setUint32(28, byteRate, true);
     view.setUint16(32, blockAlign, true);
     view.setUint16(34, bitsPerSample, true);
-
-    // "data" sub-chunk
     writeString(view, 36, 'data');
     view.setUint32(40, dataSize, true);
 
@@ -451,7 +447,7 @@ document.getElementById('voiceIcon').addEventListener('click', async () => {
             // Create audio context
             const audioContext = new AudioContext();
             const source = audioContext.createMediaStreamSource(stream);
-            const processor = audioContext.createScriptProcessor(4096, 1, 1);
+            const processor = audioContext.createScriptProcessor(2048, 1, 1); // Smaller buffer size
 
             source.connect(processor);
             processor.connect(audioContext.destination);
@@ -479,6 +475,15 @@ document.getElementById('voiceIcon').addEventListener('click', async () => {
                 }
             };
 
+            // Stop recording automatically after the specified duration
+            setTimeout(() => {
+                if (isRecording) {
+                    mediaRecorder.stop();
+                    isRecording = false;
+                    processAudioData();
+                }
+            }, MAX_RECORDING_DURATION);
+
         } catch (err) {
             document.getElementById('voiceErrorMessage').innerText = 'Error accessing microphone: ' + err.message;
             document.getElementById('voiceErrorMessage').style.display = 'block';
@@ -487,57 +492,58 @@ document.getElementById('voiceIcon').addEventListener('click', async () => {
         // Stop recording
         mediaRecorder.stop();
         isRecording = false;
-
-        // Concatenate all audio chunks
-        const audioData = new Float32Array(audioChunks.reduce((acc, chunk) => acc + chunk.length, 0));
-        let offset = 0;
-        audioChunks.forEach(chunk => {
-            audioData.set(chunk, offset);
-            offset += chunk.length;
-        });
-
-        // Convert to WAV format
-        const wavBuffer = convertToWav(audioData);
-        const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
-
-        // Prepare and send the data
-        const formData = new FormData();
-        formData.append('audio', wavBlob, 'audio.wav');
-        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
-        // Reset UI
-        document.getElementById('voiceIcon').classList.remove('recording');
-        document.getElementById('voiceIcon').innerHTML = '<i class="fas fa-microphone"></i>';
-        document.getElementById('recordingStatus').innerText = 'Click the microphone to start recording';
-
-        // Send to server
-        $.ajax({
-            url: '{% url "index" %}',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.status === 'success' && response.audio) {
-                    const audio = new Audio("data:audio/wav;base64," + response.audio);
-                    audio.play();
-                }
-                else if (response.status === 'success' && response.model_response)
-                {
-                    updatePromptContainer(response.model_response)
-
-                } else {
-                    document.getElementById('voiceErrorMessage').innerText = response.message;
-                    document.getElementById('voiceErrorMessage').style.display = 'block';
-                }
-            },
-            error: function(xhr) {
-                document.getElementById('voiceErrorMessage').innerText = 'Error uploading voice: ' + xhr.statusText;
-                document.getElementById('voiceErrorMessage').style.display = 'block';
-            }
-        });
+        processAudioData();
     }
 });
+
+function processAudioData() {
+    // Concatenate all audio chunks
+    const audioData = new Float32Array(audioChunks.reduce((acc, chunk) => acc + chunk.length, 0));
+    let offset = 0;
+    audioChunks.forEach(chunk => {
+        audioData.set(chunk, offset);
+        offset += chunk.length;
+    });
+
+    // Convert to WAV format
+    const wavBuffer = convertToWav(audioData);
+    const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+
+    // Prepare and send the data
+    const formData = new FormData();
+    formData.append('audio', wavBlob, 'audio.wav');
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+    // Reset UI
+    document.getElementById('voiceIcon').classList.remove('recording');
+    document.getElementById('voiceIcon').innerHTML = '<i class="fas fa-microphone"></i>';
+    document.getElementById('recordingStatus').innerText = 'Click the microphone to start recording';
+
+    // Send to server
+    $.ajax({
+        url: '{% url "index" %}',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            if (response.status === 'success' && response.audio) {
+                const audio = new Audio("data:audio/wav;base64," + response.audio);
+                audio.play();
+            } else if (response.status === 'success' && response.model_response) {
+                updatePromptContainer(response.model_response);
+            } else {
+                document.getElementById('voiceErrorMessage').innerText = response.message;
+                document.getElementById('voiceErrorMessage').style.display = 'block';
+            }
+        },
+        error: function(xhr) {
+            document.getElementById('voiceErrorMessage').innerText = 'Error uploading voice: ' + xhr.statusText;
+            document.getElementById('voiceErrorMessage').style.display = 'block';
+        }
+    });
+}
+
 function updatePromptContainer(response) {
     try {
         // Get the prompt container element

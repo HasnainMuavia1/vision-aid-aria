@@ -66,7 +66,8 @@ def index(request):
             image = request.FILES['file_img']
             image_data = image.read()
             global_base64_image = base64.b64encode(image_data).decode('utf-8')
-            default_prompt = "As a medical assistant, describe the disease or fracture depicted in the image in detail, without suggesting any treatment or management steps."
+            default_prompt = ("As a medical assistant, describe the disease or fracture depicted in the image in "
+                              "detail, without suggesting any treatment or management steps.")
 
             # Generate response using only the image and default prompt
             response_text = generate_prompt(global_base64_image, default_prompt)
